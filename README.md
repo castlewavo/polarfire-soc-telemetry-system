@@ -1,6 +1,5 @@
-TODO
 # PolarFire SoC Telemetry System
-In progress. Simple telemetry system for the Microchip PolarFire SoC Discovery Kit.
+Simple telemetry system for the Microchip PolarFire SoC Discovery Kit.
 
 * **`libero/`**: Libero SoC design created modifying the Discovery Kit reference design
 * **`drivers/`**: Linux kernel drivers for accessing APB registers and controlling DMA
