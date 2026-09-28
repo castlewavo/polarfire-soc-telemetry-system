@@ -1,0 +1,1 @@
+savedcmd_pf_dma.ko := riscv64-linux-gnu-ld -r -melf64lriscv -z noexecstack --no-warn-rwx-segments --build-id=sha1  -T /home/lorenzo/Code/linux4polarfire/scripts/module.lds -o pf_dma.ko pf_dma.o pf_dma.mod.o .module-common.o

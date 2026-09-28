@@ -1,0 +1,1 @@
+savedcmd_pf_regs.ko := riscv64-linux-gnu-ld -r -melf64lriscv -z noexecstack --no-warn-rwx-segments --build-id=sha1  -T /home/lorenzo/Code/linux4polarfire/scripts/module.lds -o pf_regs.ko pf_regs.o pf_regs.mod.o .module-common.o

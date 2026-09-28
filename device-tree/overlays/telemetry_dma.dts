@@ -1,0 +1,38 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+    /* 1. 32 MB LPDDR4 buffer */
+    fragment@0 {
+        target-path = "/reserved-memory";
+        __overlay__ {
+            #address-cells = <2>;
+            #size-cells = <2>;
+
+            buffer@a0000000 {
+                compatible = "shared-dma-pool";
+                reg = <0x00 0xA0000000 0x00 0x02000000>; /* 32 MB at 0xA000_0000 */
+                no-map;
+            };
+        };
+    };
+
+    /* 2. telemetry DMA node */
+    fragment@1 {
+        target-path = "/soc";
+        __overlay__ {
+            #address-cells = <2>;
+            #size-cells = <2>;
+
+            telemetry_dma: telemetry-dma@60010000 {
+                compatible = "polarfire,telemetry-dma";
+                reg = <0x00 0x60010000 0x00 0x00010000>,
+                      <0x00 0x40000600 0x00 0x00000100>;  /* CoreAXIDMA Regs, CoreGPIO Regs */
+                reg-names = "dma_regs", "gpio_regs";
+                status = "okay";
+            };
+        };
+    };
+};
+
+
