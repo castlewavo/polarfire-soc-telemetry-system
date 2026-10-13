@@ -1,5 +1,5 @@
 # PolarFire SoC Telemetry System
-Simple telemetry system for the Microchip PolarFire SoC Discovery Kit.
+Telemetry system for the Microchip PolarFire SoC Discovery Kit. The FPGA receives SPI data from an STM32 Nucleo and computes its FFT. The DMA writes the FFT results to DDR, which the Linux driver exposes to userspace. I found a bug in CoreAXI4DMAController v2.2.107, I am using a patched IP (not provided). I have contacted Microchip about it. 
 
 * **`libero/`**: Libero SoC design created modifying the Discovery Kit reference design
 * **`drivers/`**: Linux kernel drivers for accessing APB registers and controlling DMA
@@ -8,9 +8,13 @@ Simple telemetry system for the Microchip PolarFire SoC Discovery Kit.
 * **`scripts/`**: Automation scripts for compilation and deployment
 * **`tests/`**: Tools to test specific functionalities
 * **`device-tree/`**: Device tree overlays
+* **`nucleo/`**: STM32 firmware and CubeIDE project files
+* **`docs/`**: supporting docs/images
 
 ### Requisites:
-* RISC-V CC toolchain, [Linux kernel for Polarfire](https://github.com/microchip-fpga-solutions/linux4polarfire), Microchip Libero SoC (v2025.2), a Discovery Kit running Linux (I used a [pre-built image](https://github.com/polarfire-soc/meta-polarfire-soc-yocto-bsp/releases))
+* RISC-V CC toolchain, [Linux kernel for Polarfire](https://github.com/microchip-fpga-solutions/linux4polarfire), Microchip Libero SoC (v2025.2), a Discovery Kit running Linux (I used a [pre-built image](https://github.com/polarfire-soc/meta-polarfire-soc-yocto-bsp/releases)), STM32 Nucleo C031C6, STM32CubeIDE.
+
+![Setup](docs/images/setup.jpg)
 
 ### Usage:
 
@@ -26,7 +30,7 @@ Simple telemetry system for the Microchip PolarFire SoC Discovery Kit.
     ```bash
    ./scripts/host/build_all.sh
    ``` 
-4. Connect the host to the Discovery Kit with a USB cable for serial communication. You may need to install the FTDI drivers for this. Deploy the compiled files to the target board via ZMODEM (you might need to change the `SERIAL_DEV` variable in the script first): 
+4. Connect the host to the Discovery Kit with a USB cable for serial communication. You may need to install the FTDI drivers for this. Deploy the compiled files to the target board via ZMODEM (you might need to change the `SERIAL_DEV` variable in the script first, you may also need to run `rz -by` on the target first): 
     ```bash
     ./scripts/host/deploy.sh
     ```
@@ -35,12 +39,15 @@ Simple telemetry system for the Microchip PolarFire SoC Discovery Kit.
     ./load_dma_overlay.sh
     insmod pf_regs.ko && insmod pf_dma.ko
     ```
-6. Run client/tests:
+6. Program the Nucleo board with the files in `nucleo/`. Connect the corresponding pins of the Nucleo and the PolarFire for SPI communication (you can find the pinouts in the STM32CubeIDE and Libero projects). Press the USER button on the Nucleo to send a constant pattern (1024 samples, each equal to 100) to the PolarFire. This should result in a DC peak and zero non-DC bins. 
+
+7. Run client/tests on the PolarFire:
     ```bash
     ./pf_soc_telemetry_daemon /dev/pf_regs > /dev/null &
     python3 pf_telemetry_client.py
     python3 pf_leds_demo.py
     
-    ./pf_dma_test
+    ./pf_dma_test --constant 100
     
     ```   
+A second DMA capture times out, reset handling is still being worked on.

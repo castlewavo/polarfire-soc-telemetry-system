@@ -1,14 +1,16 @@
-set_io -port_name MBUS_AN \
+#previously MBUS_AN
+set_io -port_name NUCLEO_SPI_CS_N \
     -pin_name G12 \
     -fixed true \
     -io_std LVCMOS33 \
-    -DIRECTION OUTPUT
+    -DIRECTION INPUT
     
-set_io -port_name MBUS_RST \
+#previously MBUS_RST
+set_io -port_name NUCLEO_SPI_SCK \
     -pin_name B16 \
     -fixed true \
     -io_std LVCMOS33 \
-    -DIRECTION OUTPUT
+    -DIRECTION INPUT
        
 set_io -port_name MBUS_SPI_CS \
     -pin_name C16 \
@@ -33,12 +35,13 @@ set_io -port_name MBUS_SPI_MOSI \
     -fixed true \
     -io_std LVCMOS33 \
     -DIRECTION OUTPUT
-    
-set_io -port_name MBUS_PWM \
+
+#previously MBUS_PWM
+set_io -port_name NUCLEO_SPI_MOSI \
     -pin_name D13 \
     -fixed true \
     -io_std LVCMOS33 \
-    -DIRECTION OUTPUT
+    -DIRECTION INPUT
     
 set_io -port_name MBUS_INT \
     -pin_name G17 \

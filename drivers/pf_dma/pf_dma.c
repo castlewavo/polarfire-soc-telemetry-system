@@ -39,7 +39,8 @@
 
 #define AXI4_STREAM_DATA_WIDTH_BYTES sizeof(u64)
 #define ROUND_TO_DATA_WIDTH(x) ((x) - ((x) % AXI4_STREAM_DATA_WIDTH_BYTES))
-#define TEST_TRANSFER_SIZE 1024
+#define FFT_BIN_COUNT 1024
+#define TEST_TRANSFER_SIZE (FFT_BIN_COUNT * AXI4_STREAM_DATA_WIDTH_BYTES)
 
 /* GPIO regs */
 #define GPIO_OUT_REG_OFFSET 0xA0
@@ -233,17 +234,17 @@ static long telemetry_ioctl(struct file *file, unsigned int cmd, unsigned long a
         return 0;
     }
 
-    /* step 1: axis generator off */
+    /* step 1: lower FFT request */
     ret = generator_set_start(dev, false);
     if (ret) return ret;
     udelay(10);
 
-    /* step 2: arm DMA while generator is stopped */
+    /* step 2: arm DMA for 1024 unsigned 64-bit FFT powers */
     ret = start_dma_transfer(dev, TEST_TRANSFER_SIZE);
     if (ret) return ret;
 
-    /* step 3: start AXI4-stream generator */
-    pr_info("%s: starting AXI4-Stream generator\n", DRIVER_NAME);
+    /* step 3: request FFT processing and streaming */
+    pr_info("%s: requesting FFT processing and streaming\n", DRIVER_NAME);
     ret = generator_set_start(dev, true);
     if (ret) return ret;
 
@@ -255,7 +256,7 @@ static long telemetry_ioctl(struct file *file, unsigned int cmd, unsigned long a
         usleep_range(1000, 1500);
     }
 
-    /* step 5: stop generator */
+    /* step 5: lower request (this does not cancel an active FFT) */
     generator_set_start(dev, false);
 
     /* step 6: dump debug info */
@@ -267,7 +268,7 @@ static long telemetry_ioctl(struct file *file, unsigned int cmd, unsigned long a
         return -EIO;
 
     if (!(status & DMA_STAT_COMPLETE)) {
-        pr_err("%s: DMA transfer timed out\n", DRIVER_NAME);
+        pr_err("%s: DMA timed out but FFT may still be active. Reset acquisition hw before retrying.\n", DRIVER_NAME);
         return -ETIMEDOUT;
     }
 

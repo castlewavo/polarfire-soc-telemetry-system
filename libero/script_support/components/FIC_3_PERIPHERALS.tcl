@@ -19,6 +19,7 @@ sd_create_scalar_port -sd_name ${sd_name} -port_name {APB_MMASTER_in_pslverr} -p
 sd_create_scalar_port -sd_name ${sd_name} -port_name {CORE_I2C_C0_INT} -port_direction {OUT}
 sd_create_scalar_port -sd_name ${sd_name} -port_name {CoreUARTapb_TX} -port_direction {OUT}
 sd_create_scalar_port -sd_name ${sd_name} -port_name {FRAMING_ERR} -port_direction {OUT}
+sd_create_scalar_port -sd_name ${sd_name} -port_name {GPIO_OUT_LINUX_CTRL} -port_direction {OUT}
 sd_create_scalar_port -sd_name ${sd_name} -port_name {IHC_MP_APP_E51_IRQ} -port_direction {OUT}
 sd_create_scalar_port -sd_name ${sd_name} -port_name {IHC_MP_APP_U54_1_IRQ} -port_direction {OUT}
 sd_create_scalar_port -sd_name ${sd_name} -port_name {IHC_MP_APP_U54_2_IRQ} -port_direction {OUT}
@@ -45,7 +46,6 @@ sd_create_bus_port -sd_name ${sd_name} -port_name {PLL0_SW_DRI_RDATA} -port_dire
 sd_create_bus_port -sd_name ${sd_name} -port_name {PSTRB} -port_direction {IN} -port_range {[3:0]}
 
 sd_create_bus_port -sd_name ${sd_name} -port_name {APB_MMASTER_in_prdata} -port_direction {OUT} -port_range {[31:0]}
-sd_create_bus_port -sd_name ${sd_name} -port_name {GPIO_OUT_0} -port_direction {OUT} -port_range {[0:0]}
 sd_create_bus_port -sd_name ${sd_name} -port_name {GPIO_OUT} -port_direction {OUT} -port_range {[6:0]}
 sd_create_bus_port -sd_name ${sd_name} -port_name {PLL0_SW_DRI_CTRL} -port_direction {OUT} -port_range {[10:0]}
 sd_create_bus_port -sd_name ${sd_name} -port_name {Q0_LANE0_DRI_DRI_WDATA} -port_direction {OUT} -port_range {[32:0]}
@@ -160,7 +160,7 @@ sd_connect_pins -sd_name ${sd_name} -pin_names {"COREGPIO_C0:PRESETN" "CORE_I2C_
 sd_connect_pins -sd_name ${sd_name} -pin_names {"COREI2C_C0_SCL" "CORE_I2C_C0_0_WRAPPER_1:COREI2C_C0_SCL" }
 sd_connect_pins -sd_name ${sd_name} -pin_names {"COREI2C_C0_SDA" "CORE_I2C_C0_0_WRAPPER_1:COREI2C_C0_SDA" }
 sd_connect_pins -sd_name ${sd_name} -pin_names {"CORE_I2C_C0_0_WRAPPER_1:INT" "CORE_I2C_C0_INT" }
-sd_connect_pins -sd_name ${sd_name} -pin_names {"CoreGPIO_C1_0:GPIO_OUT" "GPIO_OUT_0" }
+sd_connect_pins -sd_name ${sd_name} -pin_names {"CoreGPIO_C1_0:GPIO_OUT" "GPIO_OUT_LINUX_CTRL" }
 sd_connect_pins -sd_name ${sd_name} -pin_names {"CoreUARTapb_C0_0:FRAMING_ERR" "FRAMING_ERR" }
 sd_connect_pins -sd_name ${sd_name} -pin_names {"CoreUARTapb_C0_0:OVERFLOW" "OVERFLOW" }
 sd_connect_pins -sd_name ${sd_name} -pin_names {"CoreUARTapb_C0_0:PARITY_ERR" "PARITY_ERR" }

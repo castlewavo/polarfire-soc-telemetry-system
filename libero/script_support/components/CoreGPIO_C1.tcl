@@ -5,7 +5,7 @@
 create_and_configure_core -core_vlnv {Actel:DirectCore:CoreGPIO:3.2.102} -component_name {CoreGPIO_C1} -params {\
 "APB_WIDTH:32"  \
 "FIXED_CONFIG_0:true"  \
-"FIXED_CONFIG_1:false"  \
+"FIXED_CONFIG_1:true"  \
 "FIXED_CONFIG_2:false"  \
 "FIXED_CONFIG_3:false"  \
 "FIXED_CONFIG_4:false"  \
@@ -71,7 +71,7 @@ create_and_configure_core -core_vlnv {Actel:DirectCore:CoreGPIO:3.2.102} -compon
 "IO_INT_TYPE_31:7"  \
 "IO_NUM:1"  \
 "IO_TYPE_0:1"  \
-"IO_TYPE_1:0"  \
+"IO_TYPE_1:1"  \
 "IO_TYPE_2:0"  \
 "IO_TYPE_3:0"  \
 "IO_TYPE_4:0"  \

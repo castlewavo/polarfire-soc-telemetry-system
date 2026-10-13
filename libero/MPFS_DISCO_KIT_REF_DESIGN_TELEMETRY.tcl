@@ -87,18 +87,18 @@ if {[file exists "$project_dir/$project_name.prjx"]} {
         download_core -vlnv {Actel:SystemBuilder:PF_SRAM_AHBL_AXI:*} -location {www.microchip-ip.com/repositories/SgCore}
         download_core -vlnv {Actel:Simulation:CLK_GEN:*} -location {www.microchip-ip.com/repositories/SgCore}
         download_core -vlnv {Actel:Simulation:RESET_GEN:*} -location {www.microchip-ip.com/repositories/SgCore}
-        download_core -vlnv {Actel:DirectCore:corepwm:4.5.100} -location {www.microchip-ip.com/repositories/DirectCore} 
-        download_core -vlnv {Actel:DirectCore:COREI2C:7.2.101} -location {www.microchip-ip.com/repositories/DirectCore} 
-        download_core -vlnv {Actel:DirectCore:CoreUARTapb:5.7.100} -location {www.microchip-ip.com/repositories/DirectCore} 
+        download_core -vlnv {Actel:DirectCore:corepwm:4.5.100} -location {www.microchip-ip.com/repositories/DirectCore}
+        download_core -vlnv {Actel:DirectCore:COREI2C:7.2.101} -location {www.microchip-ip.com/repositories/DirectCore}
+        download_core -vlnv {Actel:DirectCore:CoreUARTapb:5.7.100} -location {www.microchip-ip.com/repositories/DirectCore}
         download_core -vlnv {Actel:DirectCore:CoreTimer:2.0.103} -location {www.microchip-ip.com/repositories/DirectCore}
         download_core -vlnv {Actel:DirectCore:COREJTAGDEBUG:4.0.100} -location {www.microchip-ip.com/repositories/DirectCore}
         download_core -vlnv {Actel:DirectCore:COREAXITOAHBL:3.6.101} -location {www.microchip-ip.com/repositories/DirectCore}
         download_core -vlnv {Actel:DirectCore:COREAHBTOAPB3:3.2.101} -location {www.microchip-ip.com/repositories/DirectCore}
         download_core -vlnv {Actel:DirectCore:CoreAHBLite:6.1.101} -location {www.microchip-ip.com/repositories/DirectCore}
-        download_core -vlnv {Microsemi:MiV:MIV_RV32:3.1.200} -location {www.microchip-ip.com/repositories/DirectCore} 
-        download_core -vlnv {Actel:SystemBuilder:MIV_ESS:2.0.200} -location {www.microchip-ip.com/repositories/SgCore}  
+        download_core -vlnv {Microsemi:MiV:MIV_RV32:3.1.200} -location {www.microchip-ip.com/repositories/DirectCore}
+        download_core -vlnv {Actel:SystemBuilder:MIV_ESS:2.0.200} -location {www.microchip-ip.com/repositories/SgCore}
         download_core -vlnv {Actel:SystemBuilder:PF_DDR3:2.4.124} -location {www.microchip-ip.com/repositories/SgCore}
-        download_core -vlnv {Actel:DirectCore:CORESPI:5.2.104} -location {www.microchip-ip.com/repositories/SgCore} 
+        download_core -vlnv {Actel:DirectCore:CORESPI:5.2.104} -location {www.microchip-ip.com/repositories/DirectCore}
         download_core -vlnv {Actel:DirectCore:COREUART:5.7.100} -location {www.microchip-ip.com/repositories/DirectCore}
         download_core -vlnv {Actel:DirectCore:COREFFT:8.1.100} -location {www.microchip-ip.com/repositories/DirectCore}
         download_core -vlnv {Actel:DirectCore:COREFIR_PF:3.0.121} -location {www.microchip-ip.com/repositories/DirectCore}
@@ -106,7 +106,6 @@ if {[file exists "$project_dir/$project_name.prjx"]} {
     } on error err {
         puts "Downloading cores failed, the script will continue but will fail if all of the required cores aren't present in the vault."
     }
-    
 
     # Generate and import the MSS component.
     if {[file isdirectory "$local_dir/script_support/components/MSS"]} {
@@ -128,7 +127,7 @@ if {[file exists "$project_dir/$project_name.prjx"]} {
     cd ../
     set_root -module {MPFS_DISCOVERY_KIT::work}
 
-    # Import I/O and floorplanning constraints.
+    # Import I/O, floorplanning, and user timing constraints.
     import_files \
         -convert_EDN_to_HDL 0 \
         -io_pdc "${constraint_path}/MPFS_DISCOVERY_KIT_BANK_SETTINGS.pdc" \
@@ -138,8 +137,32 @@ if {[file exists "$project_dir/$project_name.prjx"]} {
         -io_pdc "${constraint_path}/MPFS_DISCOVERY_RPi.pdc" \
         -io_pdc "${constraint_path}/MPFS_DISCOVERY_UARTS.pdc" \
         -io_pdc "${constraint_path}/MPFS_DISCOVERY_7_SEG.pdc" \
-        -fp_pdc "${constraint_path}/SW_PLL.pdc"
+        -fp_pdc "${constraint_path}/SW_PLL.pdc" \
+        -sdc "${constraint_path}/nucleo_spi_inputs.sdc"
 
+    # Import the existing FFT testbench as simulation stimulus.
+    import_files \
+        -library {work} \
+        -stimulus "$local_dir/script_support/stimulus/tb_spi_buffer_fft.v"
+
+    # Build hierarchy.
+    build_design_hierarchy
+
+    # Select the simulation top.
+    set_active_testbench \
+        "tb_spi_buffer_fft::work,stimulus/tb_spi_buffer_fft.v"
+
+    # Derive timing constraints.
+    derive_constraints_sdc
+
+    # Associate generated clock constraints with synthesis.
+    organize_tool_files \
+        -tool {SYNTHESIZE} \
+        -file "${project_dir}/constraint/MPFS_DISCOVERY_KIT_derived_constraints.sdc" \
+        -module {MPFS_DISCOVERY_KIT::work} \
+        -input_type {constraint}
+
+    # Associate physical and timing constraints with Place and Route.
     organize_tool_files \
         -tool {PLACEROUTE} \
         -file "${project_dir}/constraint/io/MPFS_DISCOVERY_KIT_BANK_SETTINGS.pdc" \
@@ -150,12 +173,18 @@ if {[file exists "$project_dir/$project_name.prjx"]} {
         -file "${project_dir}/constraint/io/MPFS_DISCOVERY_UARTS.pdc" \
         -file "${project_dir}/constraint/io/MPFS_DISCOVERY_7_SEG.pdc" \
         -file "${project_dir}/constraint/fp/SW_PLL.pdc" \
+        -file "${project_dir}/constraint/MPFS_DISCOVERY_KIT_derived_constraints.sdc" \
+        -file "${project_dir}/constraint/nucleo_spi_inputs.sdc" \
         -module {MPFS_DISCOVERY_KIT::work} \
         -input_type {constraint}
 
-    # Build hierarchy and derive timing constraints.
-    build_design_hierarchy
-    derive_constraints_sdc
+    # Associate both SDC files with Timing Verification.
+    organize_tool_files \
+        -tool {VERIFYTIMING} \
+        -file "${project_dir}/constraint/MPFS_DISCOVERY_KIT_derived_constraints.sdc" \
+        -file "${project_dir}/constraint/nucleo_spi_inputs.sdc" \
+        -module {MPFS_DISCOVERY_KIT::work} \
+        -input_type {constraint}
 
     # Auto-layout the SmartDesign blocks.
     save_project
@@ -175,6 +204,27 @@ if {[file exists "$project_dir/$project_name.prjx"]} {
     save_smartdesign -sd_name {MPFS_DISCOVERY_KIT}
 }
 
+# Check and copy the FFT twiddle coefficients.
+set twiddle_src [file join $local_dir script_support fft_tools twiddle.hex]
+set twiddle_dst [file join $project_dir hdl twiddle.hex]
+
+if {![file isfile $twiddle_src]} {
+    error "Missing twiddle.hex. Run: python3 ./script_support/fft_tools/create_twiddle_rom.py, then rerun this Tcl script."
+}
+
+file mkdir [file dirname $twiddle_dst]
+file copy -force $twiddle_src $twiddle_dst
+puts "Copied twiddle coefficients to: $twiddle_dst"
+
+set dmacontrollerpatch_src [file join $local_dir script_support hdl CoreAXI4DMAController_v2_2_107_patch coreaxi4dmacontroller_axi4_initiator_ctrl.v]
+set dmacontrollerpatch_dst [file join $project_dir component work DMA_CONTROLLER DMA_CONTROLLER_0 rtl vlog core coreaxi4dmacontroller_axi4_initiator_ctrl.v]
+
+if {![file isfile $dmacontrollerpatch_src]} {
+    error "Missing CoreAXI4DMAController 2.2.107"
+}
+
+file copy -force $dmacontrollerpatch_src $dmacontrollerpatch_dst
+puts "Patched CoreAXI4DMAController 2.2.107 for correct internal caching"
 
 save_project
 puts "TCL_END: [info script]"

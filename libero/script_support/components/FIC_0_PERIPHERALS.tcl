@@ -20,7 +20,10 @@ sd_create_scalar_port -sd_name ${sd_name} -port_name {AXI4mslave0_SLAVE0_BVALID}
 sd_create_scalar_port -sd_name ${sd_name} -port_name {AXI4mslave0_SLAVE0_RLAST} -port_direction {IN}
 sd_create_scalar_port -sd_name ${sd_name} -port_name {AXI4mslave0_SLAVE0_RVALID} -port_direction {IN}
 sd_create_scalar_port -sd_name ${sd_name} -port_name {AXI4mslave0_SLAVE0_WREADY} -port_direction {IN}
-sd_create_scalar_port -sd_name ${sd_name} -port_name {START} -port_direction {IN}
+sd_create_scalar_port -sd_name ${sd_name} -port_name {GPIO_CTRL_LINUX} -port_direction {IN}
+sd_create_scalar_port -sd_name ${sd_name} -port_name {spi_cs_n} -port_direction {IN}
+sd_create_scalar_port -sd_name ${sd_name} -port_name {spi_mosi} -port_direction {IN}
+sd_create_scalar_port -sd_name ${sd_name} -port_name {spi_sck} -port_direction {IN}
 
 sd_create_scalar_port -sd_name ${sd_name} -port_name {AXI4mmaster0_MASTER0_ARREADY} -port_direction {OUT}
 sd_create_scalar_port -sd_name ${sd_name} -port_name {AXI4mmaster0_MASTER0_AWREADY} -port_direction {OUT}
@@ -200,6 +203,14 @@ sd_create_bif_port -sd_name ${sd_name} -port_name {AXI4mmaster0} -port_bif_vlnv 
 
 # Add AXI4_STREAM_DATA_GENERATOR_MINIMAL_0 instance
 sd_instantiate_hdl_module -sd_name ${sd_name} -hdl_module_name {AXI4_STREAM_DATA_GENERATOR_MINIMAL} -hdl_file {hdl\AXI4_STREAM_DATA_GENERATOR_MINIMAL.v} -instance_name {AXI4_STREAM_DATA_GENERATOR_MINIMAL_0}
+sd_connect_pins_to_constant -sd_name ${sd_name} -pin_names {AXI4_STREAM_DATA_GENERATOR_MINIMAL_0:TREADY} -value {GND}
+sd_mark_pins_unused -sd_name ${sd_name} -pin_names {AXI4_STREAM_DATA_GENERATOR_MINIMAL_0:TVALID}
+sd_mark_pins_unused -sd_name ${sd_name} -pin_names {AXI4_STREAM_DATA_GENERATOR_MINIMAL_0:TLAST}
+sd_mark_pins_unused -sd_name ${sd_name} -pin_names {AXI4_STREAM_DATA_GENERATOR_MINIMAL_0:TDATA}
+sd_mark_pins_unused -sd_name ${sd_name} -pin_names {AXI4_STREAM_DATA_GENERATOR_MINIMAL_0:TKEEP}
+sd_mark_pins_unused -sd_name ${sd_name} -pin_names {AXI4_STREAM_DATA_GENERATOR_MINIMAL_0:TSTRB}
+sd_mark_pins_unused -sd_name ${sd_name} -pin_names {AXI4_STREAM_DATA_GENERATOR_MINIMAL_0:TDEST}
+sd_mark_pins_unused -sd_name ${sd_name} -pin_names {AXI4_STREAM_DATA_GENERATOR_MINIMAL_0:TID}
 
 
 
@@ -207,11 +218,21 @@ sd_instantiate_hdl_module -sd_name ${sd_name} -hdl_module_name {AXI4_STREAM_DATA
 sd_instantiate_component -sd_name ${sd_name} -component_name {DMA_CONTROLLER} -instance_name {DMA_CONTROLLER}
 sd_create_pin_slices -sd_name ${sd_name} -pin_name {DMA_CONTROLLER:INTERRUPT} -pin_slices {[0:0]}
 sd_connect_pins_to_constant -sd_name ${sd_name} -pin_names {DMA_CONTROLLER:STRTDMAOP} -value {GND}
+sd_connect_pins_to_constant -sd_name ${sd_name} -pin_names {DMA_CONTROLLER:TID} -value {GND}
+sd_connect_pins_to_constant -sd_name ${sd_name} -pin_names {DMA_CONTROLLER:TDEST} -value {GND}
 
 
 
 # Add DMA_INITIATOR instance
 sd_instantiate_component -sd_name ${sd_name} -component_name {DMA_INITIATOR} -instance_name {DMA_INITIATOR}
+
+
+
+# Add fft_hier_0 instance
+sd_instantiate_component -sd_name ${sd_name} -component_name {fft_hier} -instance_name {fft_hier_0}
+sd_mark_pins_unused -sd_name ${sd_name} -pin_names {fft_hier_0:fft_control_0_pin_busy}
+sd_mark_pins_unused -sd_name ${sd_name} -pin_names {fft_hier_0:fft_control_0_pin_done}
+sd_mark_pins_unused -sd_name ${sd_name} -pin_names {fft_hier_0:fft_core_0_pin_done}
 
 
 
@@ -225,21 +246,40 @@ sd_instantiate_component -sd_name ${sd_name} -component_name {MSS_LSRAM} -instan
 
 
 
+# Add sample_buffer_0 instance
+sd_instantiate_hdl_module -sd_name ${sd_name} -hdl_module_name {sample_buffer} -hdl_file {hdl\sample_buffer.v} -instance_name {sample_buffer_0}
+
+
+
+# Add spi_rx_0 instance
+sd_instantiate_hdl_module -sd_name ${sd_name} -hdl_module_name {spi_rx} -hdl_file {hdl\spi_rx.v} -instance_name {spi_rx_0}
+
+
+
 # Add scalar net connections
-sd_connect_pins -sd_name ${sd_name} -pin_names {"ACLK" "AXI4_STREAM_DATA_GENERATOR_MINIMAL_0:ACLK" "DMA_CONTROLLER:CLOCK" "DMA_INITIATOR:ACLK" "FIC0_INITIATOR:ACLK" "MSS_LSRAM:ACLK" }
-sd_connect_pins -sd_name ${sd_name} -pin_names {"ARESETN" "AXI4_STREAM_DATA_GENERATOR_MINIMAL_0:RSTN" "DMA_CONTROLLER:RESETN" "DMA_INITIATOR:ARESETN" "FIC0_INITIATOR:ARESETN" "MSS_LSRAM:ARESETN" }
-sd_connect_pins -sd_name ${sd_name} -pin_names {"AXI4_STREAM_DATA_GENERATOR_MINIMAL_0:START" "START" }
-sd_connect_pins -sd_name ${sd_name} -pin_names {"AXI4_STREAM_DATA_GENERATOR_MINIMAL_0:TLAST" "DMA_CONTROLLER:TLAST" }
-sd_connect_pins -sd_name ${sd_name} -pin_names {"AXI4_STREAM_DATA_GENERATOR_MINIMAL_0:TREADY" "DMA_CONTROLLER:TREADY" }
-sd_connect_pins -sd_name ${sd_name} -pin_names {"AXI4_STREAM_DATA_GENERATOR_MINIMAL_0:TVALID" "DMA_CONTROLLER:TVALID" }
+sd_connect_pins -sd_name ${sd_name} -pin_names {"ACLK" "AXI4_STREAM_DATA_GENERATOR_MINIMAL_0:ACLK" "DMA_CONTROLLER:CLOCK" "DMA_INITIATOR:ACLK" "FIC0_INITIATOR:ACLK" "MSS_LSRAM:ACLK" "fft_hier_0:fft_control_0_pin_clk" "sample_buffer_0:clk" "spi_rx_0:clk" }
+sd_connect_pins -sd_name ${sd_name} -pin_names {"ARESETN" "AXI4_STREAM_DATA_GENERATOR_MINIMAL_0:RSTN" "DMA_CONTROLLER:RESETN" "DMA_INITIATOR:ARESETN" "FIC0_INITIATOR:ARESETN" "MSS_LSRAM:ARESETN" "fft_hier_0:fft_control_0_pin_rst_n" "sample_buffer_0:rst_n" "spi_rx_0:rst_n" }
+sd_connect_pins -sd_name ${sd_name} -pin_names {"AXI4_STREAM_DATA_GENERATOR_MINIMAL_0:START" "GPIO_CTRL_LINUX" "fft_hier_0:fft_control_0_pin_start_async" }
 sd_connect_pins -sd_name ${sd_name} -pin_names {"DMA_CONTROLLER:INTERRUPT[0:0]" "DMA_CONTROLLER_IRQ" }
+sd_connect_pins -sd_name ${sd_name} -pin_names {"DMA_CONTROLLER:TLAST" "fft_hier_0:fft_axis_output_0_pin_m_axis_tlast" }
+sd_connect_pins -sd_name ${sd_name} -pin_names {"DMA_CONTROLLER:TREADY" "fft_hier_0:fft_axis_output_0_pin_m_axis_tready" }
+sd_connect_pins -sd_name ${sd_name} -pin_names {"DMA_CONTROLLER:TVALID" "fft_hier_0:fft_axis_output_0_pin_m_axis_tvalid" }
+sd_connect_pins -sd_name ${sd_name} -pin_names {"fft_hier_0:fft_control_0_pin_block_ready" "sample_buffer_0:block_ready" }
+sd_connect_pins -sd_name ${sd_name} -pin_names {"fft_hier_0:fft_core_0_pin_release_block" "sample_buffer_0:release_block" }
+sd_connect_pins -sd_name ${sd_name} -pin_names {"fft_hier_0:fft_core_0_pin_sample_rd_en" "sample_buffer_0:rd_en" }
+sd_connect_pins -sd_name ${sd_name} -pin_names {"fft_hier_0:fft_core_0_pin_sample_rd_valid" "sample_buffer_0:rd_valid" }
+sd_connect_pins -sd_name ${sd_name} -pin_names {"sample_buffer_0:sample_valid" "spi_rx_0:sample_valid" }
+sd_connect_pins -sd_name ${sd_name} -pin_names {"spi_cs_n" "spi_rx_0:spi_cs_n" }
+sd_connect_pins -sd_name ${sd_name} -pin_names {"spi_mosi" "spi_rx_0:spi_mosi" }
+sd_connect_pins -sd_name ${sd_name} -pin_names {"spi_rx_0:spi_sck" "spi_sck" }
 
 # Add bus net connections
-sd_connect_pins -sd_name ${sd_name} -pin_names {"AXI4_STREAM_DATA_GENERATOR_MINIMAL_0:TDATA" "DMA_CONTROLLER:TDATA" }
-sd_connect_pins -sd_name ${sd_name} -pin_names {"AXI4_STREAM_DATA_GENERATOR_MINIMAL_0:TDEST" "DMA_CONTROLLER:TDEST" }
-sd_connect_pins -sd_name ${sd_name} -pin_names {"AXI4_STREAM_DATA_GENERATOR_MINIMAL_0:TID" "DMA_CONTROLLER:TID" }
-sd_connect_pins -sd_name ${sd_name} -pin_names {"AXI4_STREAM_DATA_GENERATOR_MINIMAL_0:TKEEP" "DMA_CONTROLLER:TKEEP" }
-sd_connect_pins -sd_name ${sd_name} -pin_names {"AXI4_STREAM_DATA_GENERATOR_MINIMAL_0:TSTRB" "DMA_CONTROLLER:TSTRB" }
+sd_connect_pins -sd_name ${sd_name} -pin_names {"DMA_CONTROLLER:TDATA" "fft_hier_0:fft_axis_output_0_pin_m_axis_tdata" }
+sd_connect_pins -sd_name ${sd_name} -pin_names {"DMA_CONTROLLER:TKEEP" "fft_hier_0:fft_axis_output_0_pin_m_axis_tkeep" }
+sd_connect_pins -sd_name ${sd_name} -pin_names {"DMA_CONTROLLER:TSTRB" "fft_hier_0:fft_axis_output_0_pin_m_axis_tstrb" }
+sd_connect_pins -sd_name ${sd_name} -pin_names {"fft_hier_0:fft_core_0_pin_sample_rd_addr" "sample_buffer_0:rd_addr" }
+sd_connect_pins -sd_name ${sd_name} -pin_names {"fft_hier_0:fft_core_0_pin_sample_rd_data" "sample_buffer_0:rd_data" }
+sd_connect_pins -sd_name ${sd_name} -pin_names {"sample_buffer_0:sample_data" "spi_rx_0:sample_data" }
 
 # Add bus interface net connections
 sd_connect_pins -sd_name ${sd_name} -pin_names {"AXI4mmaster0" "FIC0_INITIATOR:AXI4mmaster0" }

@@ -19,6 +19,7 @@ source components/DMA_CONTROLLER.tcl
 source components/DMA_INITIATOR.tcl 
 source components/FIC0_INITIATOR.tcl 
 source components/MSS_LSRAM.tcl 
+source components/fft_hier.tcl 
 source components/FIC_0_PERIPHERALS.tcl 
 source components/COREI2C_C0.tcl 
 source components/CORE_I2C_C0_0_WRAPPER.tcl 
